@@ -1,8 +1,6 @@
-import asyncio
 import os
 import logging
 import tempfile
-from pathlib import Path
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application,
@@ -243,7 +241,7 @@ def _cleanup_session(user_id: int) -> None:
         shutil.rmtree(session["temp_dir"], ignore_errors=True)
 
 
-async def main() -> None:
+def main() -> None:
     """Start the bot."""
     logger.info("=== GIF Maker Bot starting up ===")
 
@@ -259,7 +257,7 @@ async def main() -> None:
 
     app = Application.builder().token(token).build()
 
-    # Conversation handler — per_message=True required when using CallbackQueryHandler
+    # Conversation handler
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("makegif", makegif_command)],
         states={
@@ -282,19 +280,13 @@ async def main() -> None:
 
     logger.info("Handlers registered. Starting polling — bot is LIVE ✅")
 
-    await app.initialize()
-    await app.start()
-    await app.updater.start_polling(
+    # run_polling() manages the event loop, startup, and shutdown internally.
+    # Do NOT wrap this in asyncio.run() — it is a blocking, synchronous call.
+    app.run_polling(
         allowed_updates=Update.ALL_TYPES,
         drop_pending_updates=True,  # ignore queued updates from when bot was offline
     )
 
-    # Run until interrupted
-    await app.updater.idle()
-    await app.updater.stop()
-    await app.stop()
-    await app.shutdown()
-
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
