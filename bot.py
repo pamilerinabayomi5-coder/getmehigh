@@ -244,9 +244,17 @@ def _cleanup_session(user_id: int) -> None:
 
 def main() -> None:
     """Start the bot."""
+    logger.info("=== GIF Maker Bot starting up ===")
+
     token = os.environ.get("TELEGRAM_BOT_TOKEN")
     if not token:
+        logger.critical(
+            "FATAL: TELEGRAM_BOT_TOKEN environment variable is not set! "
+            "Add it in Render Dashboard → Environment."
+        )
         raise ValueError("TELEGRAM_BOT_TOKEN environment variable is not set!")
+
+    logger.info("Token found (length=%d). Building application...", len(token))
 
     app = Application.builder().token(token).build()
 
@@ -270,8 +278,11 @@ def main() -> None:
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(conv_handler)
 
-    logger.info("Bot is running...")
-    app.run_polling(allowed_updates=Update.ALL_TYPES)
+    logger.info("Handlers registered. Starting polling — bot is LIVE ✅")
+    app.run_polling(
+        allowed_updates=Update.ALL_TYPES,
+        drop_pending_updates=True,   # ignore queued updates from when bot was offline
+    )
 
 
 if __name__ == "__main__":
